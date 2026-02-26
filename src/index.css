@@ -1,3 +1,77 @@
 @import "tailwindcss";
 
-/* Custom styles below */
+/* ── Custom Theme ─────────────────────────────────────── */
+@theme {
+  /* Primary – Deep Blue */
+  --color-primary-50: #eef2ff;
+  --color-primary-100: #dbe4ff;
+  --color-primary-200: #bac8ff;
+  --color-primary-300: #91a7ff;
+  --color-primary-400: #748ffc;
+  --color-primary-500: #4c6ef5;
+  --color-primary-600: #3b5bdb;
+  --color-primary-700: #1a3a6b;
+  --color-primary-800: #112442;
+  --color-primary-900: #0a1628;
+
+  /* Accent – Warm Gold */
+  --color-accent-50: #fff9db;
+  --color-accent-100: #fff3bf;
+  --color-accent-200: #ffec99;
+  --color-accent-300: #ffe066;
+  --color-accent-400: #ffd43b;
+  --color-accent-500: #fab005;
+  --color-accent-600: #d4940a;
+  --color-accent-700: #a67508;
+  --color-accent-800: #7a5506;
+  --color-accent-900: #4d3504;
+
+  /* Typography */
+  --font-sans: "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-heading: "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* ── Base Styles ──────────────────────────────────────── */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-primary-800);
+    background-color: #fafbfd;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+}
+
+/* ── Animated Hero Gradient ───────────────────────────── */
+.hero-gradient {
+  background: linear-gradient(
+    -45deg,
+    #0a1628,
+    #112442,
+    #1a3a6b,
+    #162f56,
+    #0c192e,
+    #1a3a6b
+  );
+  background-size: 400% 400%;
+  animation: heroGradient 15s ease infinite;
+}
+
+@keyframes heroGradient {
+  0%   { background-position: 0% 50%; }
+  25%  { background-position: 50% 100%; }
+  50%  { background-position: 100% 50%; }
+  75%  { background-position: 50% 0%; }
+  100% { background-position: 0% 50%; }
+}
