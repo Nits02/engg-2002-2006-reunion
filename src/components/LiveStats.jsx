@@ -1,53 +1,55 @@
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import useCountUp from '../hooks/useCountUp'
+import { supabase } from '../lib/supabase'
 
-/* ── Mock data (replace with Supabase fetch later) ────── */
-const MOCK_STATS = [
-  {
-    label: 'Registrations',
-    value: 248,
-    icon: (
-      <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128H9m6 0a5.972 5.972 0 00-.786-3.07M9 19.128v-.003a9.21 9.21 0 01.786-3.07M9 19.128H3.375a4.125 4.125 0 01-.375-8.207 9.375 9.375 0 0118 0 4.125 4.125 0 01-.375 8.207M12 6.375a3.375 3.375 0 110-6.75 3.375 3.375 0 010 6.75z" />
-      </svg>
-    ),
-    color: 'from-primary-500 to-primary-700',
-    bgHover: 'group-hover:bg-primary-50',
-  },
-  {
-    label: 'Cities',
-    value: 42,
-    icon: (
-      <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 0h.008v.008h-.008V7.5z" />
-      </svg>
-    ),
-    color: 'from-accent-500 to-accent-700',
-    bgHover: 'group-hover:bg-accent-50',
-  },
-  {
-    label: 'Countries',
-    value: 12,
-    icon: (
-      <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5a17.92 17.92 0 01-8.716-2.247m0 0A9 9 0 013 12c0-1.47.353-2.856.978-4.082" />
-      </svg>
-    ),
-    color: 'from-emerald-500 to-emerald-700',
-    bgHover: 'group-hover:bg-emerald-50',
-  },
-  {
-    label: 'Volunteers',
-    value: 18,
-    icon: (
-      <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-      </svg>
-    ),
-    color: 'from-rose-500 to-rose-700',
-    bgHover: 'group-hover:bg-rose-50',
-  },
+/* ── Icon components (keeps markup clean) ──────────────── */
+const icons = {
+  registrations: (
+    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128H9m6 0a5.972 5.972 0 00-.786-3.07M9 19.128v-.003a9.21 9.21 0 01.786-3.07M9 19.128H3.375a4.125 4.125 0 01-.375-8.207 9.375 9.375 0 0118 0 4.125 4.125 0 01-.375 8.207M12 6.375a3.375 3.375 0 110-6.75 3.375 3.375 0 010 6.75z" />
+    </svg>
+  ),
+  cities: (
+    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 0h.008v.008h-.008V7.5z" />
+    </svg>
+  ),
+  countries: (
+    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5a17.92 17.92 0 01-8.716-2.247m0 0A9 9 0 013 12c0-1.47.353-2.856.978-4.082" />
+    </svg>
+  ),
+}
+
+/* ── Stat card definitions (static metadata) ───────────── */
+const STAT_META = [
+  { key: 'registrations', label: 'Registrations', icon: icons.registrations, color: 'from-primary-500 to-primary-700', bgHover: 'group-hover:bg-primary-50' },
+  { key: 'cities',        label: 'Cities',        icon: icons.cities,        color: 'from-accent-500 to-accent-700',  bgHover: 'group-hover:bg-accent-50' },
+  { key: 'countries',     label: 'Countries',      icon: icons.countries,     color: 'from-emerald-500 to-emerald-700', bgHover: 'group-hover:bg-emerald-50' },
 ]
+
+/* ── Fetch stats from Supabase ─────────────────────────── */
+async function fetchStats() {
+  const { data, error } = await supabase
+    .from('registrations')
+    .select('city, country')
+
+  if (error) {
+    console.error('LiveStats fetch error:', error.message)
+    return null
+  }
+
+  const rows = data ?? []
+  const cities = new Set(rows.map((r) => r.city?.trim().toLowerCase()).filter(Boolean))
+  const countries = new Set(rows.map((r) => r.country?.trim().toLowerCase()).filter(Boolean))
+
+  return {
+    registrations: rows.length,
+    cities: cities.size,
+    countries: countries.size,
+  }
+}
 
 /* ── Single Stat Card ──────────────────────────────────── */
 function StatCard({ label, value, icon, color, bgHover, index }) {
@@ -93,10 +95,38 @@ function StatCard({ label, value, icon, color, bgHover, index }) {
 }
 
 /* ── LiveStats Section ─────────────────────────────────── */
+const POLL_INTERVAL = 30_000 // 30 seconds
+
 export default function LiveStats() {
-  // TODO: Replace MOCK_STATS with Supabase realtime query
-  // e.g. const { data } = useSupabaseStats()
-  const stats = MOCK_STATS
+  const [stats, setStats] = useState({ registrations: 0, cities: 0, countries: 0 })
+
+  const refresh = useCallback(async () => {
+    const result = await fetchStats()
+    if (result) setStats(result)
+  }, [])
+
+  useEffect(() => {
+    // Initial fetch
+    refresh()
+
+    // Poll every 30 seconds as a fallback
+    const interval = setInterval(refresh, POLL_INTERVAL)
+
+    // Real-time subscription — refresh on any INSERT, UPDATE, or DELETE
+    const channel = supabase
+      .channel('registrations-stats')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'registrations' },
+        () => refresh(),
+      )
+      .subscribe()
+
+    return () => {
+      clearInterval(interval)
+      supabase.removeChannel(channel)
+    }
+  }, [refresh])
 
   return (
     <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
@@ -121,9 +151,9 @@ export default function LiveStats() {
         </motion.div>
 
         {/* Cards grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {stats.map((stat, i) => (
-            <StatCard key={stat.label} index={i} {...stat} />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+          {STAT_META.map((meta, i) => (
+            <StatCard key={meta.key} index={i} value={stats[meta.key]} {...meta} />
           ))}
         </div>
       </div>

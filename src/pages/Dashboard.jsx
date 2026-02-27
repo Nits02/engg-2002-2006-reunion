@@ -1,3 +1,5 @@
+import WorldHeatMap from '../components/WorldHeatMap'
+
 function Dashboard() {
   const stats = [
     { label: 'Registered', value: '142', icon: '👥' },
@@ -25,6 +27,11 @@ function Dashboard() {
             <p className="text-sm text-primary-500 mt-1">{stat.label}</p>
           </div>
         ))}
+      </div>
+
+      {/* World Heat Map */}
+      <div className="mb-12">
+        <WorldHeatMap />
       </div>
 
       {/* Recent activity placeholder */}
